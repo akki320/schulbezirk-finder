@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Schulamtsbezirk-Finder</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #f5f7fa;
+      color: #1a1a2e;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 16px;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+
+    header h1 {
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: #1a1a2e;
+      margin-bottom: 8px;
+    }
+
+    header p {
+      color: #6b7280;
+      font-size: 0.95rem;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 2px 16px rgba(0,0,0,0.08);
+      padding: 32px;
+      width: 100%;
+      max-width: 640px;
+    }
+
+    label {
+      display: block;
+      font-weight: 600;
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #6b7280;
+      margin-bottom: 8px;
+    }
+
+    .input-wrapper {
+      position: relative;
+      margin-bottom: 20px;
+    }
+
+    .input-wrapper svg {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #9ca3af;
+      pointer-events: none;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      padding: 11px 12px 11px 38px;
+      border: 1.5px solid #e5e7eb;
+      border-radius: 8px;
+      font-size: 1rem;
+      outline: none;
+      transition: border-color 0.2s;
+      background: #fafafa;
+    }
+
+    input[type="text"]:focus {
+      border-color: #4f46e5;
+      background: #fff;
+    }
+
+    .divider {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+      color: #9ca3af;
+      font-size: 0.85rem;
+    }
+
+    .divider::before, .divider::after {
+      content: "";
+      flex: 1;
+      height: 1px;
+      background: #e5e7eb;
+    }
+
+    select {
+      width: 100%;
+      padding: 11px 12px;
+      border: 1.5px solid #e5e7eb;
+      border-radius: 8px;
+      font-size: 1rem;
+      outline: none;
+      background: #fafafa;
+      cursor: pointer;
+      transition: border-color 0.2s;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%239ca3af' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      padding-right: 36px;
+    }
+
+    select:focus {
+      border-color: #4f46e5;
+      background-color: #fff;
+    }
+
+    #suggestions {
+      background: #fff;
+      border: 1.5px solid #e5e7eb;
+      border-radius: 8px;
+      margin-top: 4px;
+      max-height: 220px;
+      overflow-y: auto;
+      display: none;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    }
+
+    #suggestions li {
+      list-style: none;
+      padding: 10px 14px;
+      cursor: pointer;
+      font-size: 0.95rem;
+      border-bottom: 1px solid #f3f4f6;
+      transition: background 0.1s;
+    }
+
+    #suggestions li:last-child { border-bottom: none; }
+
+    #suggestions li:hover, #suggestions li.active {
+      background: #eef2ff;
+      color: #4f46e5;
+    }
+
+    #result {
+      margin-top: 28px;
+      display: none;
+    }
+
+    .result-box {
+      background: #eef2ff;
+      border: 1.5px solid #c7d2fe;
+      border-radius: 10px;
+      padding: 20px 24px;
+      text-align: center;
+    }
+
+    .result-box .school-name {
+      font-size: 1rem;
+      color: #6b7280;
+      margin-bottom: 6px;
+    }
+
+    .result-box .bezirk {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #4338ca;
+      margin-bottom: 4px;
+    }
+
+    .result-box .nummer {
+      font-size: 0.85rem;
+      color: #9ca3af;
+    }
+
+    #no-result {
+      margin-top: 28px;
+      padding: 16px;
+      background: #fef2f2;
+      border: 1.5px solid #fecaca;
+      border-radius: 10px;
+      text-align: center;
+      color: #dc2626;
+      font-size: 0.95rem;
+      display: none;
+    }
+
+    footer {
+      margin-top: 40px;
+      font-size: 0.8rem;
+      color: #9ca3af;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>Schulamtsbezirk-Finder</h1>
+  <p>Schulnamen eingeben oder aus der Liste wählen</p>
+</header>
+
+<div class="card">
+  <label for="search">Schule suchen</label>
+  <div class="input-wrapper">
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+      <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.099zm-5.242 1.856a5.5 5.5 0 1 1 0-11 5.5 5.5 0 0 1 0 11z"/>
+    </svg>
+    <input type="text" id="search" placeholder="z. B. Pestalozzi oder GGS Lennestr." autocomplete="off">
+    <ul id="suggestions"></ul>
+  </div>
+
+  <div class="divider">oder</div>
+
+  <label for="dropdown">Schule aus Liste wählen</label>
+  <select id="dropdown">
+    <option value="">– Bitte Schule auswählen –</option>
+  </select>
+
+  <div id="result">
+    <div class="result-box">
+      <div class="school-name" id="result-name"></div>
+      <div class="bezirk" id="result-bezirk"></div>
+      <div class="nummer" id="result-nummer"></div>
+    </div>
+  </div>
+
+  <div id="no-result">Keine Schule gefunden.</div>
+</div>
+
+<footer>Datenstand: Schuljahr 2024/25 &middot; Schulamt Düsseldorf</footer>
+
+<script>
+const schulen = [
+  {"name":"Friedrich-von-Spee-Schule (GGS Am Litzgraben)","nummer":"107086","bezirk":"Bezirk I"},
+  {"name":"Elsa-Brandström-Schule (EGS An der Golzheimer Heide)","nummer":"100717","bezirk":"Bezirk I"},
+  {"name":"St.Bruno-Schule (KGS An der Golzheimer Heide)","nummer":"100432","bezirk":"Bezirk I"},
+  {"name":"Beckbuschschule (GGS Beckbuschstr.)","nummer":"100766","bezirk":"Bezirk I"},
+  {"name":"Städt. Gemeinschaftsgrundschule Unterrath (GGS Beedstr.)","nummer":"100663","bezirk":"Bezirk I"},
+  {"name":"St. Rochus-Schule (KGS Blücherstr.)","nummer":"100596","bezirk":"Bezirk I"},
+  {"name":"Thomas-Schule (KGS Blumenthalstr.)","nummer":"100602","bezirk":"Bezirk I"},
+  {"name":"Friedrich-von-Bodelschwingh-Schule (EGS Cimbernstr.)","nummer":"100687","bezirk":"Bezirk I"},
+  {"name":"Max-Schule (KGS Citadellstr.)","nummer":"100572","bezirk":"Bezirk I"},
+  {"name":"Matthias-Claudius-Schule (GGS Ehrenstr./Bongardstr.)","nummer":"100742","bezirk":"Bezirk I"},
+  {"name":"KGS Essener Str.","nummer":"100535","bezirk":"Bezirk I"},
+  {"name":"MGS Farnweg","nummer":"100638","bezirk":"Bezirk I"},
+  {"name":"Grundschule Kaiserswerth (GGS Fliednerstr.)","nummer":"100160","bezirk":"Bezirk I"},
+  {"name":"Paul-Klee-Schule (KGS Gerresheimer Str.)","nummer":"100444","bezirk":"Bezirk I"},
+  {"name":"Franz-Vaahsen-Schule (KGS Grenzweg)","nummer":"107141","bezirk":"Bezirk I"},
+  {"name":"Heinrich-Heine-Schule (GGS Heerdter Landstr.)","nummer":"101023","bezirk":"Bezirk I"},
+  {"name":"Pestalozzi-Schule","nummer":"101023","bezirk":"Bezirk I"},
+  {"name":"St.-Franziskus-Schule (KGS Herchenbachstr.)","nummer":"100523","bezirk":"Bezirk I"},
+  {"name":"KGS Lohausen","nummer":"100298","bezirk":"Bezirk I"},
+  {"name":"GGS Krahnenburgstr.","nummer":"100950","bezirk":"Bezirk I"},
+  {"name":"GGS Lennestr.","nummer":"100936","bezirk":"Bezirk I"},
+  {"name":"GGS Max-Halbe-Str.","nummer":"100894","bezirk":"Bezirk I"},
+  {"name":"Städt. Kath. Grundschule Niederkassel (KGS Niederkasseler Str.)","nummer":"100067","bezirk":"Bezirk I"},
+  {"name":"KGS Rather Kreuzweg","nummer":"100092","bezirk":"Bezirk I"},
+  {"name":"Joachim-Neander-Schule (GGS Rather Markt)","nummer":"100699","bezirk":"Bezirk I"},
+  {"name":"GGS Rolandstr.","nummer":"100833","bezirk":"Bezirk I"},
+  {"name":"Don-Bosco-Schule (GGS Salierstr.)","nummer":"100821","bezirk":"Bezirk I"},
+  {"name":"Kartause-Hain-Schule (KGS Unterrather Str.)","nummer":"100020","bezirk":"Bezirk I"},
+  {"name":"Städt. Gemeinschaftsgrundschule Lörick (GGS Wickrather Str.)","nummer":"100778","bezirk":"Bezirk I"},
+  {"name":"GGS Wrangelstraße","nummer":"100869","bezirk":"Bezirk I"},
+  {"name":"Jüdische Grundschule, Yitzhak-Rabin-Schule","nummer":"192260","bezirk":"Bezirk I"},
+  {"name":"Gemeinschaftsgrundschule Knittkuhl (GGS Am Mergelsberg)","nummer":"107219","bezirk":"Bezirk III"},
+  {"name":"Hanna-Zürndorfer-Schule (EGS Benderstraße)","nummer":"100754","bezirk":"Bezirk III"},
+  {"name":"Aloys-Odenthal-Schule (GGS Diepenstraße)","nummer":"150861","bezirk":"Bezirk III"},
+  {"name":"Fleher Schule (KGS Fleher Straße)","nummer":"100493","bezirk":"Bezirk III"},
+  {"name":"KGS Florenstraße","nummer":"100481","bezirk":"Bezirk III"},
+  {"name":"GGS Flurstraße","nummer":"100470","bezirk":"Bezirk III"},
+  {"name":"Martin-Luther-Schule (EGS Gotenstr.)","nummer":"100730","bezirk":"Bezirk III"},
+  {"name":"Gutenberg-Schule (GGS Grafenberger Allee)","nummer":"100328","bezirk":"Bezirk III"},
+  {"name":"Carl-Sonnenschein-Schule (KGS Graf-Recke-Str.)","nummer":"100420","bezirk":"Bezirk III"},
+  {"name":"Helmholtzstraße GGS","nummer":"101047","bezirk":"Bezirk III"},
+  {"name":"Ferdinand-Heye-Schule (GGS Heyestraße)","nummer":"101000","bezirk":"Bezirk III"},
+  {"name":"KGS Höhenstraße","nummer":"100316","bezirk":"Bezirk III"},
+  {"name":"Sternwartschule (GGS Im Dahlacker)","nummer":"100985","bezirk":"Bezirk III"},
+  {"name":"Bonifatiusschule (KGS Im Dahlacker, Fleher Str.)","nummer":"100500","bezirk":"Bezirk III"},
+  {"name":"St.-Peter-Schule (KGS Jahnstraße)","nummer":"100250","bezirk":"Bezirk III"},
+  {"name":"Brehm-Schule (EGS Karl-Müller-Straße)","nummer":"100705","bezirk":"Bezirk III"},
+  {"name":"GGS Kirchfeldstraße (Regenbogenschule)","nummer":"100973","bezirk":"Bezirk III"},
+  {"name":"GGS Konkordiastraße","nummer":"100810","bezirk":"Bezirk III"},
+  {"name":"GGS Kronprinzenstraße","nummer":"100961","bezirk":"Bezirk III"},
+  {"name":"MGS Lindenstraße","nummer":"150850","bezirk":"Bezirk III"},
+  {"name":"KGS Mettmanner Straße","nummer":"100304","bezirk":"Bezirk III"},
+  {"name":"Paulusschule (KGS Paulusplatz)","nummer":"100079","bezirk":"Bezirk III"},
+  {"name":"FGZ Sonnenstraße","nummer":"100808","bezirk":"Bezirk III"},
+  {"name":"GGS Stoffeler Straße","nummer":"101011","bezirk":"Bezirk III"},
+  {"name":"KGS Unter den Eichen","nummer":"100171","bezirk":"Bezirk III"},
+  {"name":"GGS Adam-Stegerwald-Str.","nummer":"101059","bezirk":"Bezirk IV"},
+  {"name":"GGS Am Köhnen","nummer":"100390","bezirk":"Bezirk IV"},
+  {"name":"Volker Rosin Schule (GGS Arnstadter Weg)","nummer":"100365","bezirk":"Bezirk IV"},
+  {"name":"GGS Bingener Weg","nummer":"100225","bezirk":"Bezirk IV"},
+  {"name":"Wichern-Schule (GGS Brorsstr.)","nummer":"107049","bezirk":"Bezirk IV"},
+  {"name":"St.-Elisabeth-Schule (KGS Buchenstr.)","nummer":"100584","bezirk":"Bezirk IV"},
+  {"name":"GGS Deutzer Str.","nummer":"100389","bezirk":"Bezirk IV"},
+  {"name":"KGS Einsiedelstr.","nummer":"100560","bezirk":"Bezirk IV"},
+  {"name":"Montessori-Grundschule (MGS Emil-Barth-Str.)","nummer":"183635","bezirk":"Bezirk IV"},
+  {"name":"St.-Cäcilia-Schule (KGS Erich-Müller-Str.)","nummer":"100547","bezirk":"Bezirk IV"},
+  {"name":"Grundschule Schloss Benrath (GGS Erich-Müller-Str.)","nummer":"100882","bezirk":"Bezirk IV"},
+  {"name":"KGS Fuldaer Str.","nummer":"100468","bezirk":"Bezirk IV"},
+  {"name":"GGS Garather Str. (inkl. Dep. Urdenbacher Allee)","nummer":"100330","bezirk":"Bezirk IV"},
+  {"name":"Carl-Sonnenschein-Schule (KGS Gerresheimer Landstr.)","nummer":"107062","bezirk":"Bezirk IV"},
+  {"name":"Gumbert-Schule (GGS Gumbertstr.)","nummer":"100237","bezirk":"Bezirk IV"},
+  {"name":"St. Apollinaris Schule (KGS Itterstr.)","nummer":"100286","bezirk":"Bezirk IV"},
+  {"name":"KGS Josef-Kleesattel-Str.","nummer":"100158","bezirk":"Bezirk IV"},
+  {"name":"Franz-Boehm-Schule (KGS Kamper Weg)","nummer":"100274","bezirk":"Bezirk IV"},
+  {"name":"St.-Michael-Schule (KGS Kempgensweg)","nummer":"100262","bezirk":"Bezirk IV"},
+  {"name":"Astrid-Lindgren-Schule (GGS Leuthenstr.)","nummer":"100924","bezirk":"Bezirk IV"},
+  {"name":"Theodor-Heuss-Schule (GGS Lützenkircher Str.)","nummer":"100900","bezirk":"Bezirk IV"},
+  {"name":"GGS Neustrelitzer Str.","nummer":"100870","bezirk":"Bezirk IV"},
+  {"name":"Marien-Schule (KGS Rheindorfer Weg)","nummer":"100109","bezirk":"Bezirk IV"},
+  {"name":"Henri-Dunant-Schule (GGS Rheindorfer Weg)","nummer":"100213","bezirk":"Bezirk IV"},
+  {"name":"Willi-Fährmann-Schule (GGS Ricarda-Huch-Str. inkl. Dep.)","nummer":"101060","bezirk":"Bezirk IV"},
+  {"name":"GGS Richardstr.","nummer":"100845","bezirk":"Bezirk IV"},
+  {"name":"Hermann-Gmeiner-Schule (KGS Schillstr.)","nummer":"100122","bezirk":"Bezirk IV"},
+  {"name":"Selma Lagerlöf-Schule (GGS Schillstr.)","nummer":"100675","bezirk":"Bezirk IV"},
+  {"name":"GGS Steinkaul","nummer":"100061","bezirk":"Bezirk IV"},
+  {"name":"GGS Südallee","nummer":"100791","bezirk":"Bezirk IV"},
+  {"name":"GGS Vennhauser Allee","nummer":"100780","bezirk":"Bezirk IV"},
+  {"name":"Adolf-Klarenbach-Schule (GGS Walther-Rathenau-Str.)","nummer":"100651","bezirk":"Bezirk IV"},
+  {"name":"Christophorus-Schule (KGS Werstener Friedhofstr.)","nummer":"100183","bezirk":"Bezirk IV"}
+];
+
+const searchInput = document.getElementById('search');
+const dropdown = document.getElementById('dropdown');
+const suggestions = document.getElementById('suggestions');
+const resultEl = document.getElementById('result');
+const noResult = document.getElementById('no-result');
+const resultName = document.getElementById('result-name');
+const resultBezirk = document.getElementById('result-bezirk');
+const resultNummer = document.getElementById('result-nummer');
+
+// Populate dropdown (alphabetically)
+const sorted = [...schulen].sort((a, b) => a.name.localeCompare(b.name, 'de'));
+sorted.forEach(s => {
+  const opt = document.createElement('option');
+  opt.value = s.nummer + '|' + s.bezirk;
+  opt.textContent = s.name;
+  dropdown.appendChild(opt);
+});
+
+function showResult(schule) {
+  resultName.textContent = schule.name;
+  resultBezirk.textContent = schule.bezirk;
+  resultNummer.textContent = 'Schulnummer: ' + schule.nummer;
+  resultEl.style.display = 'block';
+  noResult.style.display = 'none';
+}
+
+function hideResult() {
+  resultEl.style.display = 'none';
+  noResult.style.display = 'none';
+}
+
+// Dropdown
+dropdown.addEventListener('change', () => {
+  const val = dropdown.value;
+  if (!val) { hideResult(); return; }
+  const [nummer, bezirk] = val.split('|');
+  const schule = schulen.find(s => s.nummer === nummer && s.bezirk === bezirk && sorted.find(x => x.nummer === nummer && x.name === dropdown.options[dropdown.selectedIndex].textContent));
+  const name = dropdown.options[dropdown.selectedIndex].textContent;
+  showResult({ name, nummer, bezirk });
+  searchInput.value = '';
+  suggestions.style.display = 'none';
+});
+
+// Search / autocomplete
+searchInput.addEventListener('input', () => {
+  const q = searchInput.value.trim().toLowerCase();
+  dropdown.value = '';
+  hideResult();
+  if (!q) { suggestions.style.display = 'none'; return; }
+
+  const matches = schulen.filter(s => s.name.toLowerCase().includes(q));
+  if (!matches.length) {
+    suggestions.style.display = 'none';
+    noResult.style.display = 'block';
+    return;
+  }
+
+  noResult.style.display = 'none';
+  suggestions.innerHTML = '';
+  matches.slice(0, 10).forEach(s => {
+    const li = document.createElement('li');
+    li.textContent = s.name;
+    li.addEventListener('mousedown', () => {
+      searchInput.value = s.name;
+      suggestions.style.display = 'none';
+      showResult(s);
+    });
+    suggestions.appendChild(li);
+  });
+  suggestions.style.display = 'block';
+});
+
+searchInput.addEventListener('blur', () => {
+  setTimeout(() => { suggestions.style.display = 'none'; }, 150);
+});
+
+searchInput.addEventListener('keydown', e => {
+  const items = suggestions.querySelectorAll('li');
+  let active = suggestions.querySelector('li.active');
+  if (e.key === 'ArrowDown') {
+    if (active) { active.classList.remove('active'); const next = active.nextElementSibling; if (next) next.classList.add('active'); }
+    else if (items.length) items[0].classList.add('active');
+    e.preventDefault();
+  } else if (e.key === 'ArrowUp') {
+    if (active) { active.classList.remove('active'); const prev = active.previousElementSibling; if (prev) prev.classList.add('active'); }
+    e.preventDefault();
+  } else if (e.key === 'Enter' && active) {
+    active.dispatchEvent(new Event('mousedown'));
+  } else if (e.key === 'Escape') {
+    suggestions.style.display = 'none';
+  }
+});
+</script>
+</body>
+</html>
