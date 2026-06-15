@@ -209,10 +209,31 @@
       color: #4f46e5;
     }
 
-    footer .impressum-title {
+    footer details summary {
+      cursor: pointer;
       font-weight: 600;
       color: #6b7280;
-      margin-bottom: 4px;
+      list-style: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      user-select: none;
+    }
+
+    footer details summary::-webkit-details-marker { display: none; }
+
+    footer details summary::after {
+      content: "▸";
+      font-size: 0.75em;
+      transition: transform 0.2s;
+    }
+
+    footer details[open] summary::after {
+      transform: rotate(90deg);
+    }
+
+    footer details .impressum-body {
+      margin-top: 8px;
     }
   </style>
 </head>
@@ -262,9 +283,13 @@
 </div>
 
 <footer>
-  <p class="impressum-title">Impressum</p>
-  <p>Verantwortlich für die Inhalte:<br>Medienberatende Düsseldorf (vertreten durch Yannic Ahlemann)</p>
-  <p>Kontakt: <a href="https://nrw.edumaps.de/141860/70631/xjhgjs706g/caqx8xgzal" target="_blank" rel="noopener noreferrer">Kontaktformular</a></p>
+  <details>
+    <summary>Impressum</summary>
+    <div class="impressum-body">
+      <p>Verantwortlich für die Inhalte:<br>Medienberatende Düsseldorf (vertreten durch Yannic Ahlemann)</p>
+      <p>Kontakt: <a href="https://nrw.edumaps.de/141860/70631/xjhgjs706g/caqx8xgzal" target="_blank" rel="noopener noreferrer">Kontaktformular</a></p>
+    </div>
+  </details>
 </footer>
 
 <script>
